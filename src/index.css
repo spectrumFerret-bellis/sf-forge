@@ -1,3 +1,4 @@
+@import 'leaflet/dist/leaflet.css';
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -121,5 +122,13 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  .dash-card-icon {
+    @apply rounded-full h-[60px] w-[60px] flex items-center justify-center
+  }
+
+  .leaflet-control-attribution.leaflet-control {
+    display: none;
   }
 }

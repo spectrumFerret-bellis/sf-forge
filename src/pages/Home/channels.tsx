@@ -1,57 +1,49 @@
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
-export function Channels({ className }) {
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+import { Antenna, MapPin } from 'lucide-react'
+
+const ChannelsEmpty = () => {
+  return (<div className="text-center flex flex-col items-center">
+      <div className="dash-card-icon bg-gray-100 dark:bg-gray-850">
+        <Antenna size={36} strokeWidth={1} />
+      </div>
+
+      <h3 className="font-bold mt-4 mb-2">No playlist selected</h3>
+      <p>
+        Select a playlist to view available channels
+      </p>
+    </div>)
+}
+
+const ChannelsPresent = () => {
+  return (<></>)
+}
+
+export function Channels({ playlist, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>
         <CardTitle>Channels</CardTitle>
       </CardHeader>
-      <CardContent>
-        <form>
-          <div className="flex flex-col gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <a
-                  href="#"
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-              <Input id="password" type="password" required />
-            </div>
-          </div>
-        </form>
+      <CardContent className="pb-5 h-full justify-center items-center flex text-slate-600 dark:text-slate-300">
+        {playlist ?
+          <ChannelsPresent playlist={playlist} /> : <ChannelsEmpty />}
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full">
-          Login
-        </Button>
-        <Button variant="outline" className="w-full">
-          Login with Google
-        </Button>
-      </CardFooter>
     </Card>
   )
 }
