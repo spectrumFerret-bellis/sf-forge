@@ -47,7 +47,7 @@ export function LayoutNav() {
   const toggleDarkMode = () => { setIsDark(!isDark) }
 
 
-  return (<div className="flex w-full items-center py-4 px-6">
+  return (<div className="flex w-full items-center py-4 px-10">
     <Section>
       <LogoArea isDark={isDark} />
     </Section>

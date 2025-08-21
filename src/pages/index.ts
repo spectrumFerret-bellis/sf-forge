@@ -1,5 +1,5 @@
-import { Home } from './Home'
+import { PageHome } from './Home'
 
 export {
-  Home,
+  PageHome,
 }
