@@ -375,40 +375,39 @@ export function TransmissionTimeline() {
                tickComponent={(tickProps) => {
                 const channel = sampleChannels.find(c => c.id === tickProps.formattedValue)
 
-                console.log('tickProps', channel)
-                  // We need to get the raw date from the scale domain
-                  // The x position corresponds to a specific time in our scale
-                  return (
-                    <g {...tickProps}>
-                      <rect
-                        x={-110}
-                        y={tickProps.y - 10}
-                        width={110}
-                        height={20}
-                        className={channel.index % 2 === 0 ? 'fill-white dark:fill-gray-850' : 'fill-gray-300 dark:fill-slate-750'}
-                      />
-                      <rect
-                        x={-120}
-                        y={tickProps.y - 10}
-                        width={10}
-                        height={22}
-                        fill={channel?.color || '#374151'}
-                      />
-                      <text
-                        fontSize={14}
-                        textAnchor="start"
-                        fill={channel?.color || '#374151'}
-                        transform="translate(0, 2)"
-                        x={-105}
-                        y={tickProps.y + 3}
-                        style={{ fontWeight: 900, borderColor: channel?.color || '#374151'}}
-                      >
-                        {channel?.name || tickProps.formattedValue}
-                      </text>
-                    </g>
-                  );
-                }}
-             />
+                // We need to get the raw date from the scale domain
+                // The x position corresponds to a specific time in our scale
+                return (
+                  <g {...tickProps}>
+                    <rect
+                      x={-110}
+                      y={tickProps.y - 10}
+                      width={110}
+                      height={20}
+                      className={channel.index % 2 === 0 ? 'fill-white dark:fill-gray-850' : 'fill-gray-300 dark:fill-slate-750'}
+                    />
+                    <rect
+                      x={-120}
+                      y={tickProps.y - 10}
+                      width={10}
+                      height={22}
+                      fill={channel?.color || '#374151'}
+                    />
+                    <text
+                      fontSize={14}
+                      textAnchor="start"
+                      fill={channel?.color || '#374151'}
+                      transform="translate(0, 2)"
+                      x={-105}
+                      y={tickProps.y + 3}
+                      style={{ fontWeight: 900, borderColor: channel?.color || '#374151'}}
+                    >
+                      {channel?.name || tickProps.formattedValue}
+                    </text>
+                  </g>
+                );
+              }}
+            />
           </Group>
         </svg>
       </div>
