@@ -5,9 +5,8 @@ import { Metadata }      from './metadata'
 import { Playlist }      from './playlist'
 import { TimeRange }     from './timeRange'
 import { Transcription } from './transcription'
+import { TransmissionTimeline } from './transmissionTimeline'
 import { LayoutRowCollapsible } from './../../layout/layoutRowCollapsible'
-
-import { CaretDownFilled } from '@ant-design/icons'
 
 export function PageHome() {
   const CSS_WRAPPER = `
@@ -31,8 +30,8 @@ export function PageHome() {
         <TimeRange className="flex-1 max-w-full" />
       </LayoutRowCollapsible>
 
-      <LayoutRowCollapsible title="Config" className="mb-2">
-        <Playlist className="flex-1 max-w-full" />
+      <LayoutRowCollapsible title="Timeline" className="mb-2">
+        <TransmissionTimeline />
       </LayoutRowCollapsible>
 
       <LayoutRowCollapsible title="Config" className="mb-2">

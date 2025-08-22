@@ -38,7 +38,7 @@ export function TimeRange({ playlist, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>
-        <CardTitle>TimeRange</CardTitle>
+        <CardTitle>Time Range</CardTitle>
       </CardHeader>
       <CardContent className="pb-5 h-full justify-center items-center flex text-slate-600 dark:text-slate-300">
         {playlist ?

@@ -42,7 +42,7 @@ const LocationPresent = () => {
   </MapContainer>)
 }
 
-export function Location({ transmission = true, className }) {
+export function Location({ transmission, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>
