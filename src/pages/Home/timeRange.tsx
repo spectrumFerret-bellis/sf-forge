@@ -34,7 +34,7 @@ const TimeRangePresent = () => {
   return (<></>)
 }
 
-export function TimeRange({ playlist, className }) {
+export function TimeRange({ playlist = true, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>

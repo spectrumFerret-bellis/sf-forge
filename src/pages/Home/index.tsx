@@ -34,11 +34,11 @@ export function PageHome() {
         <TransmissionTimeline />
       </LayoutRowCollapsible>
 
-      <LayoutRowCollapsible title="Config" className="mb-2">
+      <LayoutRowCollapsible title="TX Log" className="mb-2">
         <Playlist className="flex-1 max-w-full" />
       </LayoutRowCollapsible>
 
-      <LayoutRowCollapsible title="Config">
+      <LayoutRowCollapsible title="Message">
         <Transcription className="flex-1 max-w-full" />
         <Metadata className="flex-1 max-w-full" />
         <Location className="flex-1 max-w-full" />

@@ -56,7 +56,7 @@ const MetadataPresent = () => {
   </Table>)
 }
 
-export function Metadata({ transmission, className }) {
+export function Metadata({ transmission = true, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>

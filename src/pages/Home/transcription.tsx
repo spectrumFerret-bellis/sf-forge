@@ -37,7 +37,7 @@ const TranscriptionPresent = ({ audioRef, audioUrl }) => {
   </div>)
 }
 
-export function Transcription({ transmission, className }) {
+export function Transcription({ transmission = true, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>

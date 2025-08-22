@@ -34,7 +34,7 @@ const ChannelsPresent = () => {
   return (<></>)
 }
 
-export function Channels({ playlist, className }) {
+export function Channels({ playlist = true, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>
