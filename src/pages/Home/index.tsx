@@ -3,6 +3,7 @@ import { LayoutNav }     from './../../layout'
 import { Location }      from './location'
 import { Metadata }      from './metadata'
 import { Playlist }      from './playlist'
+import { TextLog }       from './textLog'
 import { TimeRange }     from './timeRange'
 import { Transcription } from './transcription'
 import { TransmissionTimeline } from './transmissionTimeline'
@@ -35,7 +36,7 @@ export function PageHome() {
       </LayoutRowCollapsible>
 
       <LayoutRowCollapsible title="TX Log" className="mb-2">
-        <Playlist className="flex-1 max-w-full" />
+        <TextLog className="flex-1 max-w-full" />
       </LayoutRowCollapsible>
 
       <LayoutRowCollapsible title="Message">

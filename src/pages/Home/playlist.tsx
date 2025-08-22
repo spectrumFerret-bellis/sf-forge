@@ -1,3 +1,7 @@
+import { useState } from 'react'
+
+import { Button } from "@/components/ui/button"
+
 import {
   Card,
   CardContent,
@@ -6,16 +10,13 @@ import {
 } from "@/components/ui/card"
 
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-import { AudioLines, MapPin } from 'lucide-react'
+import { AudioLines, MapPin, ChevronDown } from 'lucide-react'
 
 const PlaylistEmpty = () => {
   return (<div className="text-center flex flex-col items-center">
@@ -31,10 +32,60 @@ const PlaylistEmpty = () => {
 }
 
 const PlaylistPresent = () => {
-  return (<></>)
+  const [timezone, setTimezone] = useState("Eastern Time (US & Canada)")
+  const timezones = [
+      "Eastern Time (US & Canada)",
+      "Central Time (US & Canada)",
+      "Mountain Time (US & Canada)",
+      "Pacific Time (US & Canada)",
+      "UTC",
+      "GMT"
+    ]
+
+  return (<div className="w-full h-full flex flex-col justify-between">
+    <div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="outline" 
+            className="flex-1 w-full justify-between"
+            id="timezone"
+          >
+            {timezone}
+            <ChevronDown className="h-4 w-4 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-full min-w-[200px]">
+          {timezones.map((tz) => (
+            <DropdownMenuItem 
+              key={tz} 
+              onClick={() => setTimezone(tz)}
+              className={timezone === tz ? "bg-accent" : ""}
+            >
+              {tz}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <p className="text-right mt-1">Playlists Available: {3}</p>
+    </div>
+
+    <div>
+      <h3 className="font-bold text-xl">Playlist Information</h3>
+      <hr className="mb-4" />
+      <div className="grid grid-cols-4">
+        <h4 className="col-span-1">Name:</h4>
+        <p className="col-span-3">{timezone}</p>
+      </div>
+      <div className="grid grid-cols-4">
+        <h4 className="col-span-1">Channels:</h4>
+        <p className="col-span-3">{4}</p>
+      </div>
+    </div>
+  </div>)
 }
 
-export function Playlist({ playlist, className }) {
+export function Playlist({ playlist = true, className }) {
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>
