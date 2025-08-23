@@ -320,11 +320,12 @@ export function TransmissionTimeline() {
                tickComponent={(tickProps) => {
                   // We need to get the raw date from the scale domain
                   // The x position corresponds to a specific time in our scale
+                  const { formattedValue, ...tickPropsWithoutFormattedValue } = tickProps
                   const date = timeScale.invert(tickProps.x)
                   const dateStr = format(date, 'L/d/yy (E)');
                   const timeStr = format(date, 'HH:mm:ss');
                   return (
-                    <g {...tickProps}>
+                    <g {...tickPropsWithoutFormattedValue}>
                       <text
                         fontSize={10}
                         textAnchor="middle"
@@ -373,12 +374,13 @@ export function TransmissionTimeline() {
                left={0}
                hideTicks={true}
                tickComponent={(tickProps) => {
-                const channel = sampleChannels.find(c => c.id === tickProps.formattedValue)
+                const { formattedValue, ...tickPropsWithoutFormattedValue } = tickProps
+                const channel = sampleChannels.find(c => c.id === formattedValue)
 
                 // We need to get the raw date from the scale domain
                 // The x position corresponds to a specific time in our scale
                 return (
-                  <g {...tickProps}>
+                  <g {...tickPropsWithoutFormattedValue}>
                     <rect
                       x={-110}
                       y={tickProps.y - 10}
@@ -402,7 +404,7 @@ export function TransmissionTimeline() {
                       y={tickProps.y + 3}
                       style={{ fontWeight: 900, borderColor: channel?.color || '#374151'}}
                     >
-                      {channel?.name || tickProps.formattedValue}
+                      {channel?.name || formattedValue}
                     </text>
                   </g>
                 );

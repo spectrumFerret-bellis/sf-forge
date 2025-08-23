@@ -29,10 +29,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
+import { Badge } from "@/components/ui/badge"
 
 import { CalendarClock, MapPin, ChevronDown, Calendar as CalendarIcon, Clock } from 'lucide-react'
-import { useState } from 'react'
-import { format } from "date-fns"
+import { useCallback } from 'react'
+import { format, subHours } from "date-fns"
+import { fromZonedTime, toZonedTime, formatInTimeZone } from "date-fns-tz"
+import { usePlaylistStore, type TimeRange } from '@/stores/playlistStore'
 
 const TimeRangeEmpty = () => {
   return (<div className="text-center flex flex-col items-center">
@@ -48,31 +51,120 @@ const TimeRangeEmpty = () => {
 }
 
 const TimeRangePresent = () => {
-  const [timezone, setTimezone] = useState("Eastern Time (US & Canada)")
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date(2025, 7, 22)) // August 22, 2025
-  const [startTime, setStartTime] = useState("12:07 PM")
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date(2025, 7, 22)) // August 22, 2025
-  const [endTime, setEndTime] = useState("01:07 PM")
+  const { timeRange, setTimeRange, selectedQuickRange, setSelectedQuickRange } = usePlaylistStore()
+  
+  // Get current values from store (no local state syncing)
+  const timezone = timeRange?.timezone || "UTC"
+  const startDate = timeRange?.start
+  const endDate = timeRange?.end
+  const startTime = timeRange?.start ? formatInTimeZone(timeRange.start, timezone, "hh:mm a") : "12:00 PM"
+  const endTime = timeRange?.end ? formatInTimeZone(timeRange.end, timezone, "hh:mm a") : "01:00 PM"
+
+  // Get local timezone
+  const getLocalTimezone = () => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone
+    } catch {
+      return "UTC"
+    }
+  }
 
   const timezones = [
-    "Eastern Time (US & Canada)",
-    "Central Time (US & Canada)",
-    "Mountain Time (US & Canada)",
-    "Pacific Time (US & Canada)",
     "UTC",
-    "GMT"
-  ]
+    getLocalTimezone(),
+    "America/New_York", // Eastern Time
+    "America/Chicago",  // Central Time
+    "America/Denver",   // Mountain Time
+    "America/Los_Angeles", // Pacific Time
+    "Europe/London",    // GMT
+  ].filter((tz, index, arr) => arr.indexOf(tz) === index) // Remove duplicates
 
   const quickRanges = [
-    { label: "15m", value: "15m" },
-    { label: "30m", value: "30m" },
-    { label: "1h", value: "1h" },
-    { label: "2h", value: "2h" },
-    { label: "4h", value: "4h" },
-    { label: "8h", value: "8h" },
-    { label: "12h", value: "12h" },
-    { label: "24h", value: "24h" },
+    { label: "15m", value: "15m", hours: 0.25 },
+    { label: "30m", value: "30m", hours: 0.5 },
+    { label: "1h", value: "1h", hours: 1 },
+    { label: "2h", value: "2h", hours: 2 },
+    { label: "4h", value: "4h", hours: 4 },
+    { label: "8h", value: "8h", hours: 8 },
+    { label: "12h", value: "12h", hours: 12 },
+    { label: "24h", value: "24h", hours: 24 },
   ]
+
+  // Parse time string and combine with date in the specified timezone
+  const parseTime = useCallback((timeStr: string, baseDate: Date, targetTimezone: string): Date => {
+    const [time, period] = timeStr.split(' ')
+    const [hours, minutes] = time.split(':').map(Number)
+    
+    let hour = hours
+    if (period === 'PM' && hours !== 12) hour += 12
+    if (period === 'AM' && hours === 12) hour = 0
+    
+    // Create a date string in the target timezone
+    const year = baseDate.getFullYear()
+    const month = String(baseDate.getMonth() + 1).padStart(2, '0')
+    const day = String(baseDate.getDate()).padStart(2, '0')
+    const hourStr = String(hour).padStart(2, '0')
+    const minuteStr = String(minutes).padStart(2, '0')
+    
+    // Create ISO string in target timezone
+    const dateString = `${year}-${month}-${day}T${hourStr}:${minuteStr}:00`
+    
+    // Convert to UTC using the target timezone
+    return fromZonedTime(dateString, targetTimezone)
+  }, [])
+
+  // Update time range in store
+  const updateTimeRange = useCallback((newStartDate?: Date, newEndDate?: Date, newStartTime?: string, newEndTime?: string, newTimezone?: string) => {
+    const currentStartDate = newStartDate || startDate
+    const currentEndDate = newEndDate || endDate
+    const currentStartTime = newStartTime || startTime
+    const currentEndTime = newEndTime || endTime
+    const currentTimezone = newTimezone || timezone
+
+    if (!currentStartDate || !currentEndDate) return
+
+    try {
+      const startDateTime = parseTime(currentStartTime, currentStartDate, currentTimezone)
+      const endDateTime = parseTime(currentEndTime, currentEndDate, currentTimezone)
+      
+      const newTimeRange: TimeRange = {
+        start: startDateTime,
+        end: endDateTime,
+        timezone: currentTimezone
+      }
+      
+      setTimeRange(newTimeRange)
+    } catch (error) {
+      console.error('Error parsing time:', error)
+    }
+  }, [startDate, endDate, startTime, endTime, timezone, setTimeRange, parseTime])
+
+  // Handle quick range selection
+  const handleQuickRange = useCallback((hours: number, rangeValue: string) => {
+    // Create time range - always use UTC for consistency
+    const now = new Date()
+    const start = subHours(now, hours)
+    
+    const newTimeRange: TimeRange = {
+      start,
+      end: now,
+      timezone
+    }
+    
+    setTimeRange(newTimeRange)
+    setSelectedQuickRange(rangeValue)
+  }, [timezone, setTimeRange, setSelectedQuickRange])
+
+  // Check if a quick range is currently active
+  const isQuickRangeActive = useCallback((hours: number) => {
+    if (!timeRange) return false
+    const now = new Date()
+    const expectedStart = subHours(now, hours)
+    const startDiff = Math.abs(timeRange.start.getTime() - expectedStart.getTime())
+    const endDiff = Math.abs(timeRange.end.getTime() - now.getTime())
+    // Allow 1 minute tolerance for rounding
+    return startDiff < 60000 && endDiff < 60000
+  }, [timeRange])
 
   return (
     <div className="space-y-6">
@@ -87,14 +179,14 @@ const TimeRangePresent = () => {
           <div className="mb-2 flex items-center">
             <Label htmlFor="timezone" className="mr-2 my-0">Timezone</Label>
 
-            <DropdownMenu className="flex-1">
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
                   className="flex-1 w-full justify-between"
                   id="timezone"
                 >
-                  {timezone}
+                  {timezone === getLocalTimezone() ? `${timezone} (Local)` : timezone}
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
@@ -102,7 +194,18 @@ const TimeRangePresent = () => {
                 {timezones.map((tz) => (
                   <DropdownMenuItem 
                     key={tz} 
-                    onClick={() => setTimezone(tz)}
+                    onClick={() => {
+                      if (timeRange) {
+                        // When changing timezone, preserve the same absolute moment
+                        // but represent it in the new timezone
+                        const newTimeRange: TimeRange = {
+                          start: timeRange.start,  // Keep same absolute time
+                          end: timeRange.end,      // Keep same absolute time
+                          timezone: tz
+                        }
+                        setTimeRange(newTimeRange)
+                      }
+                    }}
                     className={timezone === tz ? "bg-accent" : ""}
                   >
                     {tz}
@@ -121,7 +224,7 @@ const TimeRangePresent = () => {
                   <div className="relative">
                     <Input
                       type="text"
-                      value={startDate ? format(startDate, "MM/dd/yyyy") : ""}
+                      value={startDate ? formatInTimeZone(startDate, timezone, "MM/dd/yyyy") : ""}
                       readOnly
                       className="pl-10 cursor-pointer"
                       placeholder="MM/DD/YYYY"
@@ -133,7 +236,11 @@ const TimeRangePresent = () => {
                   <Calendar
                     mode="single"
                     selected={startDate}
-                    onSelect={setStartDate}
+                    onSelect={(date) => {
+                      if (date && timeRange) {
+                        updateTimeRange(date, timeRange.end, undefined, undefined, timeRange.timezone)
+                      }
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
@@ -142,8 +249,13 @@ const TimeRangePresent = () => {
                 <Input
                   type="text"
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={(e) => {
+                    if (timeRange) {
+                      updateTimeRange(timeRange.start, timeRange.end, e.target.value, undefined, timeRange.timezone)
+                    }
+                  }}
                   className="pl-10"
+                  placeholder="12:00 PM"
                 />
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
@@ -159,7 +271,7 @@ const TimeRangePresent = () => {
                   <div className="relative">
                     <Input
                       type="text"
-                      value={endDate ? format(endDate, "MM/dd/yyyy") : ""}
+                      value={endDate ? formatInTimeZone(endDate, timezone, "MM/dd/yyyy") : ""}
                       readOnly
                       className="pl-10 cursor-pointer"
                       placeholder="MM/DD/YYYY"
@@ -171,7 +283,11 @@ const TimeRangePresent = () => {
                   <Calendar
                     mode="single"
                     selected={endDate}
-                    onSelect={setEndDate}
+                    onSelect={(date) => {
+                      if (date && timeRange) {
+                        updateTimeRange(timeRange.start, date, undefined, undefined, timeRange.timezone)
+                      }
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
@@ -180,8 +296,13 @@ const TimeRangePresent = () => {
                 <Input
                   type="text"
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
+                  onChange={(e) => {
+                    if (timeRange) {
+                      updateTimeRange(timeRange.start, timeRange.end, undefined, e.target.value, timeRange.timezone)
+                    }
+                  }}
                   className="pl-10"
+                  placeholder="01:00 PM"
                 />
                 <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
@@ -195,9 +316,10 @@ const TimeRangePresent = () => {
               {quickRanges.slice(0, 6).map((range) => (
                 <Button
                   key={range.value}
-                  variant="outline"
+                  variant={isQuickRangeActive(range.hours) ? "default" : "outline"}
                   size="sm"
                   className="text-xs"
+                  onClick={() => handleQuickRange(range.hours, range.value)}
                 >
                   {range.label}
                 </Button>
@@ -207,9 +329,10 @@ const TimeRangePresent = () => {
               {quickRanges.slice(6).map((range) => (
                 <Button
                   key={range.value}
-                  variant="outline"
+                  variant={isQuickRangeActive(range.hours) ? "default" : "outline"}
                   size="sm"
                   className="text-xs"
+                  onClick={() => handleQuickRange(range.hours, range.value)}
                 >
                   {range.label}
                 </Button>
@@ -224,29 +347,40 @@ const TimeRangePresent = () => {
             <div className="mb-2 flex items-center">
               <Label htmlFor="timezone" className="mr-2 my-0">Timezone</Label>
 
-              <DropdownMenu className="flex-1">
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 w-full justify-between"
-                    id="timezone"
+                          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="flex-1 w-full justify-between"
+                  id="timezone"
+                >
+                  {timezone}
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full min-w-[200px]">
+                {timezones.map((tz) => (
+                  <DropdownMenuItem 
+                    key={tz} 
+                    onClick={() => {
+                      if (timeRange) {
+                        // When changing timezone, preserve the same absolute moment
+                        // but represent it in the new timezone
+                        const newTimeRange: TimeRange = {
+                          start: timeRange.start,  // Keep same absolute time
+                          end: timeRange.end,      // Keep same absolute time
+                          timezone: tz
+                        }
+                        setTimeRange(newTimeRange)
+                      }
+                    }}
+                    className={timezone === tz ? "bg-accent" : ""}
                   >
-                    {timezone}
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full min-w-[200px]">
-                  {timezones.map((tz) => (
-                    <DropdownMenuItem 
-                      key={tz} 
-                      onClick={() => setTimezone(tz)}
-                      className={timezone === tz ? "bg-accent" : ""}
-                    >
-                      {tz}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    {tz}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             </div>
           </div>
         </TabsContent>
@@ -255,15 +389,24 @@ const TimeRangePresent = () => {
   )
 }
 
-export function TimeRange({ playlist = true, className }) {
+export function TimeRange({ className }: { className?: string }) {
+  const { selectedPlaylist, timeRange } = usePlaylistStore()
+  
   return (
-    <Card className={`w-full max-w-md ${className}`}>
+    <Card className={`w-full ${className || ''}`}>
       <CardHeader>
-        <CardTitle>Time Range</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          Time Range
+          {timeRange && (
+            <Badge variant="secondary" className="text-xs">
+              Active
+            </Badge>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="pb-6">
-        {playlist ?
-          <TimeRangePresent playlist={playlist} /> : <TimeRangeEmpty />}
+        {selectedPlaylist ?
+          <TimeRangePresent /> : <TimeRangeEmpty />}
       </CardContent>
     </Card>
   )

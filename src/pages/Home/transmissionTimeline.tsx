@@ -17,6 +17,7 @@ import {
 
 import { SquareChartGantt, MapPin } from 'lucide-react'
 import { TransmissionTimeline as TT } from './../../components/custom/transmissionTimeline'
+import { usePlaylistStore } from '@/stores/playlistStore'
 
 const TransmissionTimelineEmpty = () => {
   return (<div className="text-center flex flex-col items-center">
@@ -32,18 +33,42 @@ const TransmissionTimelineEmpty = () => {
 }
 
 const TransmissionTimelinePresent = () => {
-  return (<><TT /></>)
+  const { selectedPlaylist } = usePlaylistStore()
+  
+  return (
+    <div className="w-full">
+      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <p className="text-sm text-blue-700 dark:text-blue-300">
+          <strong>Selected Playlist:</strong> {selectedPlaylist?.name}
+        </p>
+        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+          ID: {selectedPlaylist?.id}
+        </p>
+      </div>
+      <TT />
+    </div>
+  )
 }
 
-export function TransmissionTimeline({ timeline = true, className }) {
-  return (!timeline ?
-    (<Card className={`w-full ${className} max-w-full`}>
+interface TransmissionTimelineProps {
+  className?: string
+}
+
+export function TransmissionTimeline({ className }: TransmissionTimelineProps) {
+  const { selectedPlaylist } = usePlaylistStore()
+  
+  return (
+    <Card className={`w-full ${className || ''} max-w-full`}>
       <CardHeader>
         <CardTitle>Timeline</CardTitle>
       </CardHeader>
       <CardContent className="pb-5 h-full justify-center items-center flex text-slate-600 dark:text-slate-300">
-        <TransmissionTimelineEmpty />
+        {!selectedPlaylist ? (
+          <TransmissionTimelineEmpty />
+        ) : (
+          <TransmissionTimelinePresent />
+        )}
       </CardContent>
-    </Card>)
-    : <TransmissionTimelinePresent timeline={timeline} />)
+    </Card>
+  )
 }

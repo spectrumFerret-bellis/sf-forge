@@ -6,8 +6,11 @@ import {
 } from "@/components/ui/card"
 
 import { Textarea } from "@/components/ui/textarea"
-
 import { Captions } from 'lucide-react'
+import type { RadioTransmission } from '@/hooks/api/transmissions'
+import { formatInTimeZone } from 'date-fns-tz'
+import { usePlaylistStore } from '@/stores/playlistStore'
+import { getChannelColorSafe } from '@/lib/colorUtils'
 
 const TranscriptionEmpty = () => {
   return (<div className="text-center flex flex-col items-center">
@@ -22,30 +25,59 @@ const TranscriptionEmpty = () => {
     </div>)
 }
 
-const TranscriptionPresent = ({ audioRef, audioUrl }) => {
-  return (<div className="w-full flex flex-col justify-between h-full gap-4">
-    <div className="flex justify-between w-full">
-      <div className="flex items-center gap-2">
-        <div className="h-[8px] w-[8px] rounded-full bg-red-500" />
-        <p>Fire Dispatch</p>
+const TranscriptionPresent = ({ transmission }: { transmission: RadioTransmission }) => {
+  const transcription = transmission.radio_transcriptions?.[0]?.transcription || 'No transcription available'
+  const audioUrl = transmission.audio_file_url
+  const channelColor = getChannelColorSafe(transmission.channelable_id, '#6b7280')
+  
+  return (
+    <div className="w-full flex flex-col justify-between h-full gap-4">
+      <div className="flex justify-between w-full">
+        <div className="flex items-center gap-2">
+          <div 
+            className="h-[8px] w-[8px] rounded-full" 
+            style={{ backgroundColor: channelColor }}
+          />
+          <p>{transmission.sys_tg_name?.trim() || 'Unknown'}</p>
+        </div>
+        <p className="text-sm text-gray-500">
+          {transmission.rx_started_at ? 
+            formatInTimeZone(new Date(transmission.rx_started_at), 'UTC', 'MM/dd/yyyy, HH:mm:ss') : 
+            'N/A'
+          }
+        </p>
       </div>
-      <p>08/21/2025, 12:34:08</p>
-    </div>
 
-    <Textarea className="grow resize-none" />
-    <audio ref={audioRef} controls {...(audioUrl && { src: audioUrl })} className="w-full" />
-  </div>)
+      <Textarea 
+        className="grow resize-none" 
+        value={transcription}
+        readOnly
+      />
+      {audioUrl && (
+        <audio controls src={audioUrl} className="w-full" />
+      )}
+    </div>
+  )
 }
 
-export function Transcription({ transmission = true, className }) {
+interface TranscriptionProps {
+  className?: string
+}
+
+export function Transcription({ className }: TranscriptionProps) {
+  const { selectedTransmission } = usePlaylistStore()
+  
   return (
     <Card className={`w-full max-w-sm ${className}`}>
       <CardHeader>
         <CardTitle>Transcription</CardTitle>
       </CardHeader>
       <CardContent className="pb-5 h-full justify-center items-center flex text-slate-600 dark:text-slate-300">
-        {transmission ?
-          <TranscriptionPresent transmission={transmission} /> : <TranscriptionEmpty />}
+        {selectedTransmission ? (
+          <TranscriptionPresent transmission={selectedTransmission} />
+        ) : (
+          <TranscriptionEmpty />
+        )}
       </CardContent>
     </Card>
   )

@@ -9,7 +9,12 @@ import { Transcription } from './transcription'
 import { TransmissionTimeline } from './transmissionTimeline'
 import { LayoutRowCollapsible } from './../../layout/layoutRowCollapsible'
 
+import { usePlaylists } from '@/hooks/api'
+
 export function PageHome() {
+  const { data: playlists, isLoading, error } = usePlaylists() // fetch available playlists
+
+
   const CSS_WRAPPER = `
     flex min-h-screen flex-col w-full items-center text-slate-600 dark:text-slate-300
     bg-white/85 dark:bg-slate-900
@@ -26,9 +31,14 @@ export function PageHome() {
 
     <div className={CSS_CONTENT}>
       <LayoutRowCollapsible title="Config" className="mb-2">
-        <Playlist className="flex-1 max-w-full" />
+        <Playlist 
+          playlists={playlists?.radio_playlists || []}
+          isLoading={isLoading}
+          error={error}
+          className="flex-1 max-w-full" 
+        />
         <Channels className="flex-1 max-w-full" />
-        <TimeRange className="flex-1 max-w-full" />
+        <TimeRange className="w-auto" />
       </LayoutRowCollapsible>
 
       <LayoutRowCollapsible title="Timeline" className="mb-2">

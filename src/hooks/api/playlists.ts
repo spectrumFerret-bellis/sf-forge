@@ -2,12 +2,34 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
 // Types
+export interface RadioPlaylistChannel {
+  id: string
+  playlist_channelable_type: string
+  playlist_channelable_id: string
+  radio_playlist_id: string
+  user_id: string
+  position: number
+  created_at: string
+  updated_at: string
+  channelable_details: {
+    channel_type: string
+    channel: {
+      id: string
+    }
+  }
+}
+
 export interface RadioPlaylist {
   id: string
   name: string
   description?: string
+  configuration?: any
+  user_id: string
   created_at: string
   updated_at: string
+  radio_trunking_receive_channels: any[]
+  radio_conventional_receive_channels: any[]
+  radio_playlist_channels: RadioPlaylistChannel[]
 }
 
 export interface CreatePlaylistData {

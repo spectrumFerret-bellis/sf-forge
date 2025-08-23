@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button }              from "@/components/ui/button"
 import { LogoArea }            from "@/components/custom/logoArea"
+import { useLogout }           from "@/hooks/api/auth"
 
 import { 
-  Clock4, TriangleAlert
+  Clock4, TriangleAlert, LogOut
 } from "lucide-react"
 
 import { 
@@ -11,21 +13,32 @@ import {
   SunOutlined, MoonOutlined
 } from '@ant-design/icons'
 
+interface BtnProps {
+  icon?: React.ReactNode
+  label: string
+  onClick?: () => void
+}
 
-const Btn = ({ icon, label, onClick }) => (<Button 
+const Btn = ({ icon, label, onClick }: BtnProps) => (<Button 
   className="cursor-pointer rounded-xs mx-1" 
   onClick={onClick} variant="secondary" 
   size="sm">{icon}{label}</Button>)
 
+interface SectionProps {
+  className?: string
+  children: React.ReactNode
+}
 
-const Section = ({ className, children }) =>
-  <div className={`flex items-center flex-1 ${className}`}>{children}</div>
-
+const Section = ({ className, children }: SectionProps) =>
+  <div className={`flex items-center flex-1 ${className || ''}`}>{children}</div>
 
 export function LayoutNav() {
   const [isDark, setIsDark]       = useState(false)
-  const [themeMode, setThemeMode] = useState([<SunOutlined />, 'Light'])
+  const [themeMode, setThemeMode] = useState<[React.ReactNode, string]>([<SunOutlined />, 'Light'])
   const [logo, setLogo]           = useState()
+
+  const navigate = useNavigate()
+  const logoutMutation = useLogout()
 
   useEffect(() => {
     if (isDark)
@@ -46,6 +59,19 @@ export function LayoutNav() {
 
   const toggleDarkMode = () => { setIsDark(!isDark) }
 
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync()
+      // Navigate to login page after successful logout
+      navigate('/auth')
+    } catch (error) {
+      console.error('Logout failed:', error)
+      // Even if API call fails, clear local storage and redirect
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      navigate('/auth')
+    }
+  }
 
   return (<div className="flex w-full items-center py-4 px-10">
     <Section>
@@ -53,16 +79,20 @@ export function LayoutNav() {
     </Section>
 
     <Section className="justify-center">
-      <Btn icon={<Clock4 />} label="Real-Time" />
-      <Btn icon={<FolderViewOutlined />} label="Review" />
-      <Btn icon={<ReconciliationOutlined />} label="Summarize" />
-      <Btn icon={<TriangleAlert />} label="Alert" />
+      <Btn icon={<Clock4 />} label="Real-Time" onClick={() => {}} />
+      <Btn icon={<FolderViewOutlined />} label="Review" onClick={() => {}} />
+      <Btn icon={<ReconciliationOutlined />} label="Summarize" onClick={() => {}} />
+      <Btn icon={<TriangleAlert />} label="Alert" onClick={() => {}} />
     </Section>
 
     <Section className="justify-end">
-      <Btn icon={<QuestionOutlined />} label="Help" />
+      <Btn icon={<QuestionOutlined />} label="Help" onClick={() => {}} />
       <Btn onClick={toggleDarkMode} icon={themeMode[0]} label={themeMode[1]} />
-      <Btn label="Logout" />
+      <Btn 
+        icon={<LogOut />} 
+        label="Logout" 
+        onClick={handleLogout}
+      />
     </Section>
   </div>)
 }
