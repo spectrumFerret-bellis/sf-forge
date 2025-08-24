@@ -146,3 +146,12 @@
 .dash-card-icon {
   @apply w-16 h-16 rounded-lg flex items-center justify-center;
 }
+
+/* Custom transmission timeline styling */
+.visx-group.visx-axis.visx-axis-left .visx-axis-tick:nth-child(even) > g > rect:first-child {
+  @apply fill-slate-800
+}
+
+.visx-group.visx-axis.visx-axis-left .visx-axis-tick:nth-child(odd) > g > rect:first-child {
+  @apply fill-slate-300
+}

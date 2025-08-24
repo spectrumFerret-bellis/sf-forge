@@ -1,3 +1,61 @@
+# Spectrum Ferret Forge
+
+A modern React application for radio transmission analysis and real-time data management.
+
+## Quick Start
+
+### Prerequisites
+
+- **Node.js** 18+ 
+- **pnpm** (recommended package manager, can use yarn/npm if you'd like)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/spectrumFerret-bellis/sf-forge.git
+cd sf-forge
+
+# Install dependencies
+pnpm install
+
+# Start the development server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Preview the production build
+pnpm preview
+```
+
+### Available Scripts
+
+```bash
+# Development
+pnpm dev          # Start development server
+pnpm build        # Build for production
+pnpm preview      # Preview production build
+
+# Code Quality
+pnpm lint         # Run ESLint
+pnpm lint:fix     # Fix ESLint issues
+pnpm type-check   # Run TypeScript type checking
+
+# Testing
+pnpm test         # Run tests
+pnpm test:watch   # Run tests in watch mode
+pnpm test:coverage # Run tests with coverage
+```
+
+### Development Server
+
+Once you run `pnpm dev`, the application will be available at:
+- **Local**: http://localhost:5173
+- **Network**: http://your-ip:5173
+
+---
+
 # Brian
 
 1. Gets playlist channels from radio_conventional_receive_channels and radio_trunking_receive_channels

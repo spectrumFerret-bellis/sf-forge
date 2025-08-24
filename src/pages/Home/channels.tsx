@@ -207,7 +207,7 @@ const ChannelsPresent = ({ channels }: { channels: PlaylistChannelWithDetails[] 
                   />
                 </TableCell>
                 <TableCell className="h-[5px] py-1">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs bg-gray-100 dark:bg-gray-850">
                     {channel.channel_type}
                   </Badge>
                 </TableCell>
