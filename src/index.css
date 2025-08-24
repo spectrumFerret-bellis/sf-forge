@@ -1,7 +1,14 @@
+@import 'leaflet/dist/leaflet.css';
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@theme {
+  --color-gray-850: #22262c;
+  --color-slate-750: #1a1d21;
+}
+
+@custom-variant dark (&:is(.dark *)) {
+}
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -117,4 +124,34 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+  .leaflet-control-attribution.leaflet-control {
+    display: none;
+  }
+
+/* Bounce dots animation */
+@keyframes bounce-dots {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Custom utility classes */
+.dash-card-icon {
+  @apply w-16 h-16 rounded-lg flex items-center justify-center;
+}
+
+/* Custom transmission timeline styling */
+.visx-group.visx-axis.visx-axis-left .visx-axis-tick:nth-child(even) > g > rect:first-child {
+  @apply fill-slate-800
+}
+
+.visx-group.visx-axis.visx-axis-left .visx-axis-tick:nth-child(odd) > g > rect:first-child {
+  @apply fill-slate-300
 }

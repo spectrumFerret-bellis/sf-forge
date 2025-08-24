@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       port: PORT,
       host: true,
       proxy: {
-        '/api': {
+        '/api/v1': {
           target: env.SF_API_HOST
             ? `http://${env.SF_API_HOST}`
             : 'http://panic.taile5ef8e.ts.net',
