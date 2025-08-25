@@ -14,8 +14,8 @@ import { getChannelColorSafe } from '@/lib/colorUtils'
 
 // Component to render talk group with channel color
 const TalkGroupCell = ({ channelId, talkGroupName }: { channelId: string, talkGroupName: string }) => {
-  const { getChannelColor: getStoreChannelColor } = usePlaylistStore()
-  const channelColor = getStoreChannelColor(channelId)
+  const { getChannelColorByTalkGroup } = usePlaylistStore.getState()
+  const channelColor = getChannelColorByTalkGroup(talkGroupName)
   
   return (
     <span 
@@ -164,7 +164,7 @@ export function TransmissionsTable({ className, onTransmissionSelect, selectedTr
         const tx = row.original
         return (
           <TalkGroupCell 
-            channelId={tx.channelable_id} 
+            channelId={tx.channelable_id || ''} 
             talkGroupName={tx.sys_tg_name || ''} 
           />
         )
@@ -272,13 +272,8 @@ export function TransmissionsTable({ className, onTransmissionSelect, selectedTr
                 </thead>
                 <tbody>
                   {transmissions.map((tx) => {
-                    const { getChannelColor: getStoreChannelColor, getTalkGroupColor: getStoreTalkGroupColor } = usePlaylistStore.getState()
-
-                    
-                    // Use talk group color if channelable_id is undefined, otherwise use channel color
-                    const channelColor = tx.channelable_id 
-                      ? getStoreChannelColor(tx.channelable_id)
-                      : getStoreTalkGroupColor(tx.sys_tg_name?.trim() || 'Unknown')
+                    const { getChannelColorByTalkGroup } = usePlaylistStore.getState()
+                    const channelColor = getChannelColorByTalkGroup(tx.sys_tg_name || '')
                     
                     const isSelected = selectedTransmissionId === tx.id
                     return (
@@ -299,6 +294,7 @@ export function TransmissionsTable({ className, onTransmissionSelect, selectedTr
                         <td className="px-3 py-0">
                           <span 
                             className="font-medium"
+                            style={{ color: channelColor }}
                           >
                             {tx.sys_tg_name?.trim() || 'Unknown'}
                           </span>

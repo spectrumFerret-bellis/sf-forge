@@ -69,7 +69,7 @@ const ChannelsLoading = () => {
 }
 
 const ChannelsPresent = ({ channels }: { channels: PlaylistChannelWithDetails[] }) => {
-  const { selectedChannelIds, selectAllChannels, toggleChannelSelection, setChannelColors, setTalkGroupColors } = usePlaylistStore()
+  const { selectedChannelIds, selectAllChannels, toggleChannelSelection, setChannelColors, setTalkGroupColors, setChannelNameToColorIndex } = usePlaylistStore()
 
   // Auto-select all channels and set channel colors when channels are loaded
   useEffect(() => {
@@ -78,14 +78,18 @@ const ChannelsPresent = ({ channels }: { channels: PlaylistChannelWithDetails[] 
       const sortedChannels = [...channels].sort((a, b) => a.channel_name.localeCompare(b.channel_name))
       const channelIds = sortedChannels.map(channel => channel.channel_id)
       const talkGroups = sortedChannels.map(channel => channel.channel_name.trim())
+      const channelNames = sortedChannels.map(channel => channel.channel_name.trim())
       
       // Only set channel colors if they haven't been set yet for this playlist
-      const { channelColors, talkGroupColors } = usePlaylistStore.getState()
+      const { channelColors, talkGroupColors, channelNameToColorIndex } = usePlaylistStore.getState()
       if (Object.keys(channelColors).length === 0) {
         setChannelColors(channelIds)
       }
       if (Object.keys(talkGroupColors).length === 0) {
         setTalkGroupColors(talkGroups)
+      }
+      if (Object.keys(channelNameToColorIndex).length === 0) {
+        setChannelNameToColorIndex(channelNames)
       }
       
       // Auto-select all channels if none are selected
@@ -93,7 +97,7 @@ const ChannelsPresent = ({ channels }: { channels: PlaylistChannelWithDetails[] 
         selectAllChannels(channelIds)
       }
     }
-  }, [channels, selectedChannelIds.length, selectAllChannels, setChannelColors, setTalkGroupColors])
+  }, [channels, selectedChannelIds.length, selectAllChannels, setChannelColors, setTalkGroupColors, setChannelNameToColorIndex])
 
   // Column definitions
   const columns: ColumnDef<PlaylistChannelWithDetails>[] = [

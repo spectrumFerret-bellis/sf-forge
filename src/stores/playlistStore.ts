@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 import type { RadioPlaylist } from '@/hooks/api/playlists'
 import type { RadioTransmission } from '@/hooks/api/transmissions'
-import { getChannelColor, COLORBLIND_SAFE_PALETTE } from '@/lib/colorUtils'
+import { getChannelColor, COLOR_PALETTE } from '@/lib/colorUtils'
+import { useUserSettingsStore } from './userSettingsStore'
+
 
 export interface TimeRange {
   start: Date
@@ -24,6 +26,7 @@ interface PlaylistState {
   // Channel Colors State
   channelColors: Record<string, string> // channelableId -> hex color
   talkGroupColors: Record<string, string> // talkGroupName -> hex color
+  channelNameToColorIndex: Record<string, number> // channelName -> color index
   
   // Transmission Selection State
   selectedTransmission: RadioTransmission | null
@@ -41,10 +44,13 @@ interface PlaylistState {
   clearChannelSelection: () => void
   setChannelColors: (channelIds: string[]) => void
   setTalkGroupColors: (talkGroups: string[]) => void
+  setChannelNameToColorIndex: (channelNames: string[]) => void
   getChannelColor: (channelableId: string) => string
   getTalkGroupColor: (talkGroupName: string) => string
+  getChannelColorByTalkGroup: (talkGroupName: string) => string
   setSelectedTransmission: (transmission: RadioTransmission | null) => void
   clearSelectedTransmission: () => void
+  refreshChannelColors: () => void
 }
 
 // Get local timezone
@@ -76,6 +82,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   selectedChannelIds: [], // Start with no channels selected
   channelColors: {}, // Start with no channel colors
   talkGroupColors: {}, // Start with no talk group colors
+  channelNameToColorIndex: {}, // Start with no channel name to color index mapping
   selectedTransmission: null, // Start with no transmission selected
   
   // Actions
@@ -106,42 +113,54 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   clearChannelSelection: () => set({ selectedChannelIds: [] }),
   setChannelColors: (channelIds) => {
     const channelColors: Record<string, string> = {}
+    // Get custom colors from user settings store
+    const userSettings = useUserSettingsStore.getState()
     channelIds.forEach((channelId, index) => {
-      // Assign colors by index (0-47) to get sequential, predictable colors
-      // Index 0 = Red, Index 1 = Green, Index 2 = Blue, etc.
-      if (index < COLORBLIND_SAFE_PALETTE.length) {
-        channelColors[channelId] = COLORBLIND_SAFE_PALETTE[index].hex
-      } else {
-        // Fallback to a default color if we exceed the palette
-        channelColors[channelId] = '#6b7280'
-      }
+      // Assign colors by index using the new color system with custom colors
+      channelColors[channelId] = getChannelColor(index, userSettings.theming?.customColors)
     })
 
     set({ channelColors })
   },
   getChannelColor: (channelableId) => {
     const state = get()
-    // If color is already assigned in store, use it
+    // Find the channel index
+    const channelIndex = state.selectedChannelIds.indexOf(channelableId)
+    
+    // Always check for the latest custom colors first
+    if (channelIndex >= 0) {
+      // Get custom colors from user settings store
+      const userSettings = useUserSettingsStore.getState()
+      return getChannelColor(channelIndex, userSettings.theming?.customColors)
+    }
+    
+    // If color is already assigned in store, use it (for channels not in selectedChannelIds)
     if (state.channelColors[channelableId]) {
       return state.channelColors[channelableId]
     }
-    // Otherwise, fallback to a default color for any unassigned channels
-
+    
+    // Fallback to a default color for any unassigned channels
     return '#6b7280' // Default gray color
   },
   setTalkGroupColors: (talkGroups) => {
     const talkGroupColors: Record<string, string> = {}
+    // Get custom colors from user settings store
+    const userSettings = useUserSettingsStore.getState()
     talkGroups.forEach((talkGroup, index) => {
-      // Assign colors by index (0-47) to get sequential, predictable colors
-      if (index < COLORBLIND_SAFE_PALETTE.length) {
-        talkGroupColors[talkGroup] = COLORBLIND_SAFE_PALETTE[index].hex
-      } else {
-        // Fallback to a default color if we exceed the palette
-        talkGroupColors[talkGroup] = '#6b7280'
-      }
+      // Assign colors by index using the new color system with custom colors
+      talkGroupColors[talkGroup] = getChannelColor(index, userSettings.theming?.customColors)
     })
 
     set({ talkGroupColors })
+  },
+  setChannelNameToColorIndex: (channelNames) => {
+    const channelNameToColorIndex: Record<string, number> = {}
+    // Sort channel names to ensure consistent color assignment
+    const sortedChannelNames = [...channelNames].sort()
+    sortedChannelNames.forEach((channelName, index) => {
+      channelNameToColorIndex[channelName] = index
+    })
+    set({ channelNameToColorIndex })
   },
   getTalkGroupColor: (talkGroupName) => {
     const state = get()
@@ -153,6 +172,34 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
     return '#6b7280' // Default gray color
   },
+  getChannelColorByTalkGroup: (talkGroupName) => {
+    const state = get()
+    // Get the color index for this talk group name
+    const colorIndex = state.channelNameToColorIndex[talkGroupName]
+    
+    if (colorIndex !== undefined) {
+      // Get custom colors from user settings store
+      const userSettings = useUserSettingsStore.getState()
+      return getChannelColor(colorIndex, userSettings.theming?.customColors)
+    }
+    
+    // Fallback to a default color for any unassigned talk groups
+    return '#6b7280' // Default gray color
+  },
   setSelectedTransmission: (transmission) => set({ selectedTransmission: transmission }),
-  clearSelectedTransmission: () => set({ selectedTransmission: null })
+  clearSelectedTransmission: () => set({ selectedTransmission: null }),
+  
+  // Refresh channel colors when custom colors are updated
+  refreshChannelColors: () => {
+    const state = get()
+    if (state.selectedChannelIds.length > 0) {
+      // Re-set channel colors with latest custom colors
+      const channelColors: Record<string, string> = {}
+      const userSettings = useUserSettingsStore.getState()
+      state.selectedChannelIds.forEach((channelId, index) => {
+        channelColors[channelId] = getChannelColor(index, userSettings.theming?.customColors)
+      })
+      set({ channelColors })
+    }
+  }
 }))

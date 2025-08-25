@@ -6,6 +6,7 @@ import { format, addMinutes } from "date-fns";
 import { useTransmissionTimelineSummary } from "@/hooks/api/transmissionSummary";
 import { usePlaylistChannels } from "@/hooks/api/playlistChannels";
 import { usePlaylistStore } from "@/stores/playlistStore";
+import { useUserSettingsStore } from "@/stores/userSettingsStore";
 
 // Types for transmission data
 interface Transmission {
@@ -40,15 +41,28 @@ const SummaryCard = ({
   </div>
 );
 
-export function TransmissionTimeline() {
+interface TransmissionTimelineProps {
+  containerRef?: React.RefObject<HTMLDivElement>;
+  className?: string;
+}
+
+export function TransmissionTimeline({ containerRef: externalRef, className }: TransmissionTimelineProps = {}) {
   const { selectedPlaylist, timeRange, getChannelColor, setChannelColors } =
     usePlaylistStore();
-  const [zoomLevel, setZoomLevel] = useState(23);
-  const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date }>({
-    start: new Date("2025-08-21T12:08:23"),
-    end: new Date("2025-08-21T16:30:26"),
+  const { theming } = useUserSettingsStore();
+  
+  // Debug theming values
+  console.log('Timeline theming config:', {
+    timelineUseColorPalette: theming?.timelineUseColorPalette,
+    timelineColoredLabels: theming?.timelineColoredLabels,
+    timelineColoredTransmissionBars: theming?.timelineColoredTransmissionBars,
+    fullTheming: theming
   });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [zoomLevel, setZoomLevel] = useState(23);
+  const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
+  const internalRef = useRef<HTMLDivElement>(null);
+  const containerRef = externalRef || internalRef;
+  const [containerWidth, setContainerWidth] = useState(1200);
 
   // Get playlist channels
   const { data: playlistChannelsData } = usePlaylistChannels(
@@ -95,7 +109,7 @@ export function TransmissionTimeline() {
         index,
       };
     });
-  }, [playlistChannelsData, getChannelColor]);
+  }, [playlistChannelsData, getChannelColor, theming?.customColors]);
 
   const transmissions = useMemo(() => {
     if (!summaryData?.channelSummaries) return [];
@@ -141,21 +155,46 @@ export function TransmissionTimeline() {
     }
   }, [timeRange]);
 
+  // Initialize visible range if not set
+  useEffect(() => {
+    if (!visibleRange && timeRange) {
+      setVisibleRange({
+        start: timeRange.start,
+        end: timeRange.end,
+      });
+    }
+  }, [visibleRange, timeRange]);
+
   // Measure container width
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
+        const width = containerRef.current.offsetWidth;
+        if (width > 0) {
+          setContainerWidth(width);
+        }
       }
     };
 
+    // Initial measurement
     updateWidth();
+    
+    // Use ResizeObserver for more reliable measurements
+    const resizeObserver = new ResizeObserver(updateWidth);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    // Fallback to window resize listener
     window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
+    
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateWidth);
+    };
   }, []);
 
   // Chart dimensions
-  const [containerWidth, setContainerWidth] = useState(1200);
   const height = 360;
   const margin = { top: 60, right: 60, bottom: 20, left: 120 };
 
@@ -163,22 +202,41 @@ export function TransmissionTimeline() {
   const chartWidth = containerWidth - margin.left - margin.right;
   const chartHeight = height - margin.top - margin.bottom;
 
-  // Create scales
-  const timeScale = scaleTime({
-    domain: [visibleRange.start, visibleRange.end],
-    range: [0, chartWidth],
-  });
+  // Create scales - always call these hooks, even if we return early
+  const timeScale = useMemo(() => {
+    if (!visibleRange) return null;
+    return scaleTime({
+      domain: [visibleRange.start, visibleRange.end],
+      range: [0, chartWidth],
+    });
+  }, [visibleRange?.start, visibleRange?.end, chartWidth]);
 
-  const channelScale = scaleBand({
+  const channelScale = useMemo(() => scaleBand({
     domain: channels.map((ch) => ch.id),
     range: [0, chartHeight],
     padding: 0.1,
-  });
+  }), [channels, chartHeight]);
 
-  // Filter transmissions for visible range
-  const visibleTransmissions = transmissions.filter(
-    (t) => t.startTime >= visibleRange.start && t.endTime <= visibleRange.end
-  );
+  // Filter transmissions for visible range - always call this hook
+  const visibleTransmissions = useMemo(() => {
+    if (!visibleRange || !timeScale) return [];
+    return transmissions.filter(
+      (t) => t.startTime >= visibleRange.start && t.endTime <= visibleRange.end
+    );
+  }, [transmissions, visibleRange, timeScale]);
+
+  // Early return if visibleRange is not initialized
+  if (!visibleRange) {
+    return (
+      <div className="w-full bg-white dark:bg-transparent">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500 dark:text-gray-400">
+            Initializing timeline...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 10, 100));
@@ -232,13 +290,13 @@ export function TransmissionTimeline() {
     return `${startStr} - ${endStr} (${durationMinutes} min)`;
   };
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state or if visibleRange is not initialized
+  if (isLoading || !visibleRange || !timeScale) {
     return (
       <div className="w-full bg-white dark:bg-transparent">
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500 dark:text-gray-400">
-            Loading transmission data...
+            {isLoading ? "Loading transmission data..." : "Initializing timeline..."}
           </div>
         </div>
       </div>
@@ -312,31 +370,24 @@ export function TransmissionTimeline() {
       </div>
 
       {/* Timeline Chart */}
-      <div className="relative" ref={containerRef}>
-        <svg width="100%" height={height}>
+      <div className={`relative w-full ${className || ''}`} ref={containerRef}>
+        <svg width="100%" height={height} style={{ minWidth: '100%' }}>
           <Group left={margin.left} top={margin.top}>
-            {/* Background grid lines */}
- {/*           {Array.from({ length: 25 }, (_, i) => {
-              const time = addMinutes(visibleRange.start, i * 10);
-              const x = timeScale(time);
-              return (
-                <line
-                  key={i}
-                  x1={x}
-                  y1={0}
-                  x2={x}
-                  y2={chartHeight}
-                  stroke="#e5e7eb"
-                  strokeWidth={1}
-                  strokeDasharray="2,2"
-                />
-              );
-            })}*/}
-
             {/* Channel lanes */}
             {channels.map((channel, i) => {
               const y = channelScale(channel.id);
               const laneHeight = channelScale.bandwidth();
+              
+              // Determine lane color based on timeline configuration
+              let laneColor: string;
+              if (theming?.timelineUseColorPalette === true) {
+                // Use color palette colors
+                laneColor = getChannelColor(channel.id);
+              } else {
+                // Use alternating grayscale colors
+                laneColor = i % 2 === 0 ? '#f3f4f6' : '#e5e7eb'; // light gray alternating
+              }
+              
               return (
                 <rect
                   key={channel.id}
@@ -344,7 +395,7 @@ export function TransmissionTimeline() {
                   y={y}
                   width={chartWidth}
                   height={laneHeight}
-                  fill={channel.color}
+                  fill={laneColor}
                   opacity={0.2}
                 />
               );
@@ -365,6 +416,17 @@ export function TransmissionTimeline() {
               const height = channelScale.bandwidth() * 0.8;
               const yOffset = (channelScale.bandwidth() - height) / 2;
 
+              // Determine transmission bar color based on timeline configuration
+              let barColor: string;
+              if (theming?.timelineColoredTransmissionBars === true) {
+                // Use color palette colors
+                barColor = getChannelColor(channel.id);
+              } else {
+                // Use alternating grayscale colors
+                const channelIndex = channels.findIndex(c => c.id === transmission.channel);
+                barColor = channelIndex % 2 === 0 ? '#6b7280' : '#9ca3af'; // medium gray alternating
+              }
+
               return (
                 <rect
                   key={transmission.id}
@@ -372,7 +434,7 @@ export function TransmissionTimeline() {
                   y={y + yOffset}
                   width={Math.max(width, 2)}
                   height={height}
-                  fill={channel.color}
+                  fill={barColor}
                   opacity={0.8}
                   rx={2}
                   className="hover:opacity-100 transition-opacity cursor-pointer"
@@ -391,8 +453,6 @@ export function TransmissionTimeline() {
                 const { formattedValue, ...tickPropsWithoutFormattedValue } =
                   tickProps;
                 const date = timeScale.invert(tickProps.x);
-                const dateStr = format(date, "L/d/yy (E)");
-                const timeStr = format(date, "HH:mm:ss");
                 const textSize = 13
 
                 return (<>
@@ -409,26 +469,68 @@ export function TransmissionTimeline() {
 
                   {/* The transmission block indicating a transmission length */}
                   <g {...tickPropsWithoutFormattedValue}>
-                    <text
-                      fontSize={textSize}
-                      textAnchor="middle"
-                      fill="#6b7280"
-                      transform="translate(0, -15)"
-                      x={tickProps.x}
-                      y={tickProps.y - 6}
-                    >
-                      {dateStr}
-                    </text>
-                    <text
-                      fontSize={textSize}
-                      textAnchor="middle"
-                      fill="#6b7280"
-                      transform="translate(0, -5)"
-                      x={tickProps.x}
-                      y={tickProps.y - 3}
-                    >
-                      {timeStr}
-                    </text>
+                    {theming?.timelineCompactAxisLabels ? (
+                      // Compact card-style format (like the image)
+                      <>
+                        {/* Day of week */}
+                        <text
+                          fontSize={textSize - 2}
+                          textAnchor="middle"
+                          fill="#6b7280"
+                          transform="translate(0, -20)"
+                          x={tickProps.x}
+                          y={tickProps.y - 8}
+                        >
+                          {format(date, "E")}
+                        </text>
+                        <text
+                          fontSize={textSize - 2}
+                          textAnchor="middle"
+                          fill="#6b7280"
+                          transform="translate(0, -7)"
+                          x={tickProps.x}
+                          y={tickProps.y - 8}
+                        >
+                          {format(date, "M/d")}
+                        </text>
+                        {/* Time */}
+                        <text
+                          fontSize={textSize - 2}
+                          textAnchor="middle"
+                          fill="#374151"
+                          fontWeight="600"
+                          transform="translate(0, -4)"
+                          x={tickProps.x}
+                          y={tickProps.y + 2}
+                        >
+                          {format(date, "HH:mm")}
+                        </text>
+                      </>
+                    ) : (
+                      // Traditional horizontal format
+                      <>
+                        <text
+                          fontSize={textSize}
+                          textAnchor="middle"
+                          fill="#6b7280"
+                          transform="translate(0, -15)"
+                          x={tickProps.x}
+                          y={tickProps.y - 6}
+                        >
+                          {format(date, "L/d/yy (E)")}
+                        </text>
+                        <text
+                          fontSize={textSize}
+                          textAnchor="middle"
+                          fill="#6b7280"
+                          transform="translate(0, -5)"
+                          x={tickProps.x}
+                          y={tickProps.y - 3}
+                        >
+                          {format(date, "HH:mm:ss")}
+                        </text>
+                      </>
+                    )}
                   </g>
                 </>);
               }}
@@ -446,8 +548,11 @@ export function TransmissionTimeline() {
                 const laneHeight = channelScale.bandwidth();
                 const textSize = 14;
 
-                // We need to get the raw date from the scale domain
-                // The x position corresponds to a specific time in our scale
+                // Determine label color based on timeline configuration
+                const labelColor = theming?.timelineColoredLabels === true && channel 
+                  ? getChannelColor(channel.id) 
+                  : "#6b7280"; // gray color
+
                 return (
                   <g {...tickPropsWithoutFormattedValue}>
                     {/* Full sidebar */}
@@ -460,24 +565,22 @@ export function TransmissionTimeline() {
                       opacity={0.2}
                     />
 
-                    {/* Outside left color lane border */}
+                    {/* Outside left color lane border - always use color mapping */}
                     <rect
                       x={-120}
                       y={tickProps.y - 10}
                       width={10}
                       height={laneHeight}
-                      fill={channel?.color || "#374151"}
+                      fill={channel ? getChannelColor(channel.id) : "#374151"}
                     />
 
                     {/* Lane label */}
                     <text
                       fontSize={textSize}
                       textAnchor="start"
-                      className="fill-slate-600 dark:fill-slate-300"
-                      // transform="translate(0, 2)"
+                      fill={labelColor}
                       x={-105}
                       y={tickProps.y + textSize / 2}
-                      style={{ borderColor: channel?.color || "#374151" }}
                     >
                       {channel?.name || formattedValue}
                     </text>

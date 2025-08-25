@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/avatar"
 
 import { 
-  Clock4, TriangleAlert, LogOut, Settings
+  Clock4, TriangleAlert, LogOut, Settings, ArrowLeftFromLine,
+  BookOpenText,
+  BookUser,
+  Palette,
 } from "lucide-react"
 
 import { 
@@ -48,7 +51,7 @@ interface SectionProps {
 const Section = ({ className, children }: SectionProps) =>
   <div className={`flex items-center flex-1 ${className || ''}`}>{children}</div>
 
-export function LayoutNav() {
+export function LayoutAccountNav() {
   const [themeMode, setThemeMode] = useState<[React.ReactNode, string]>([<SunOutlined />, 'Light'])
   const [logo, setLogo]           = useState()
 
@@ -83,14 +86,22 @@ export function LayoutNav() {
     </Section>
 
     <Section className="justify-center">
-      <Btn icon={<Clock4 />} label="Real-Time" onClick={() => { navigate('/') }} />
-      <Btn icon={<FolderViewOutlined />} label="Review" onClick={() => {}} />
-      <Btn icon={<ReconciliationOutlined />} label="Summarize" onClick={() => {}} />
-      <Btn icon={<TriangleAlert />} label="Alert" onClick={() => {}} />
+      <Btn
+        icon={<BookUser />} 
+        label="Account Settings"
+        onClick={() => { navigate('/user/settings/account') }} />
+      <Btn
+        icon={<Palette />} 
+        label="Theme Settings"
+        onClick={() => { navigate('/user/settings/theme') }} />
+      <Btn
+        icon={<BookOpenText />} 
+        label="Report Settings"
+        onClick={() => { navigate('/user/settings/report') }} />
     </Section>
 
     <Section className="justify-end">
-      <Btn icon={<QuestionOutlined />} label="Help" onClick={() => {}} />
+      <Btn icon={<ArrowLeftFromLine />} label="Back to Transmissions" onClick={() => { navigate('/') }} />
       <Btn onClick={toggleDarkMode} icon={themeMode[0]} label={themeMode[1]} />
 
       <DropdownMenu>
@@ -104,7 +115,7 @@ export function LayoutNav() {
 
           <DropdownMenuItem 
             className="cursor-pointer"
-            onClick={() => { navigate("/user/settings/account") }}
+            onClick={() => { navigate("/user/settings") }}
           >
             <Settings />
             Settings
