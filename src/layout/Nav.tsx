@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button }              from "@/components/ui/button"
 import { LogoArea }            from "@/components/custom/logoArea"
+import { HelpModal }           from "@/components/custom/helpModal"
 import { useLogout }           from "@/hooks/api/auth"
 import { useThemeStore }       from "@/stores/themeStore"
 
@@ -51,6 +52,7 @@ const Section = ({ className, children }: SectionProps) =>
 export function LayoutNav() {
   const [themeMode, setThemeMode] = useState<[React.ReactNode, string]>([<SunOutlined />, 'Light'])
   const [logo, setLogo]           = useState()
+  const [helpModalOpen, setHelpModalOpen] = useState(false)
 
   const navigate = useNavigate()
   const logoutMutation = useLogout()
@@ -77,47 +79,53 @@ export function LayoutNav() {
     }
   }
 
-  return (<div className="flex w-full items-center py-4 px-10">
-    <Section>
-      <LogoArea isDark={isDark} />
-    </Section>
+  return (
+    <>
+      <div className="flex w-full items-center py-4 px-10">
+        <Section>
+          <LogoArea isDark={isDark} />
+        </Section>
 
-    <Section className="justify-center">
-      <Btn icon={<Clock4 />} label="Real-Time" onClick={() => { navigate('/') }} />
-      <Btn icon={<FolderViewOutlined />} label="Review" onClick={() => {}} />
-      <Btn icon={<ReconciliationOutlined />} label="Summarize" onClick={() => {}} />
-      <Btn icon={<TriangleAlert />} label="Alert" onClick={() => {}} />
-    </Section>
+        <Section className="justify-center">
+          <Btn icon={<Clock4 />} label="Real-Time" onClick={() => { navigate('/') }} />
+          <Btn icon={<FolderViewOutlined />} label="Review" onClick={() => {}} />
+          <Btn icon={<ReconciliationOutlined />} label="Summarize" onClick={() => {}} />
+          <Btn icon={<TriangleAlert />} label="Alert" onClick={() => {}} />
+        </Section>
 
-    <Section className="justify-end">
-      <Btn icon={<QuestionOutlined />} label="Help" onClick={() => {}} />
-      <Btn onClick={toggleDarkMode} icon={themeMode[0]} label={themeMode[1]} />
+        <Section className="justify-end">
+          <Btn icon={<QuestionOutlined />} label="Help" onClick={() => setHelpModalOpen(true)} />
+          <Btn onClick={toggleDarkMode} icon={themeMode[0]} label={themeMode[1]} />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Avatar className="cursor-pointer">
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>SF</AvatarFallback>
-          </Avatar>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar className="cursor-pointer">
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>SF</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
 
-          <DropdownMenuItem 
-            className="cursor-pointer"
-            onClick={() => { navigate("/user/settings/account") }}
-          >
-            <Settings />
-            Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            className="cursor-pointer"
-            onClick={handleLogout}
-          >
-            <LogOut />
-            Logout
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </Section>
-  </div>)
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => { navigate("/user/settings/account") }}
+              >
+                <Settings />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={handleLogout}
+              >
+                <LogOut />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Section>
+      </div>
+      
+      <HelpModal open={helpModalOpen} onOpenChange={setHelpModalOpen} />
+    </>
+  )
 }
