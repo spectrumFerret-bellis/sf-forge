@@ -1,5 +1,5 @@
 import { Routes, Route }    from 'react-router-dom'
-import { LayoutAccountNav } from './../../layout'
+import { LayoutNav } from '@/layout'
 import { SectionProfile }   from './profile'
 import { SectionTheming }   from './theming'
 import { SectionReporting } from './reporting'
@@ -25,7 +25,7 @@ export function PageUserProfile () {
     `
 
   return (<div className={CSS_WRAPPER}>
-      <LayoutAccountNav />
+      <LayoutNav isUserSettings={true} />
 
       <div className={CSS_CONTENT}>
         <Routes>

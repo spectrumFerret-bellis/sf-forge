@@ -44,7 +44,9 @@ const AccountFormSchema = z.object({
 })
 
 export function SectionProfile() {
-  const { account, updateAccount, resetAccount } = useUserSettingsStore()
+  const account = useUserSettingsStore(state => state.account)
+  const updateAccount = useUserSettingsStore(state => state.updateAccount)
+  const resetAccount = useUserSettingsStore(state => state.resetAccount)
   
   const form = useForm<z.infer<typeof AccountFormSchema>>({
     resolver: zodResolver(AccountFormSchema),

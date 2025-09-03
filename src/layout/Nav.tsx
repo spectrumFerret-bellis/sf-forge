@@ -1,28 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button }              from "@/components/ui/button"
 import { LogoArea }            from "@/components/custom/logoArea"
-import { HelpModal }           from "@/components/custom/helpModal"
+import { HelpModal }           from "@/components/custom/HelpModal"
 import { useLogout }           from "@/hooks/api/auth"
 import { useThemeStore }       from "@/stores/themeStore"
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import * as Dropdown from "@/components/ui/dropdown-menu"
+import * as Avatar from "@/components/ui/avatar"
 
 import { 
-  Avatar, 
-  AvatarFallback, 
-  AvatarImage 
-} from "@/components/ui/avatar"
-
-import { 
-  Clock4, TriangleAlert, LogOut, Settings
+  Clock4, TriangleAlert, LogOut, Settings, ArrowLeftFromLine,
+  BookOpenText,
+  BookUser,
+  Palette,
 } from "lucide-react"
 
 import { 
@@ -42,21 +33,22 @@ const Btn = ({ icon, label, onClick }: BtnProps) => (<Button
   size="sm">{icon}{label}</Button>)
 
 interface SectionProps {
-  className?: string
-  children: React.ReactNode
+  className?     : string
+  children       : React.ReactNode
 }
 
 const Section = ({ className, children }: SectionProps) =>
   <div className={`flex items-center flex-1 ${className || ''}`}>{children}</div>
 
-export function LayoutNav() {
+export function LayoutNav({ isUserSettings = false }) {
   const [themeMode, setThemeMode] = useState<[React.ReactNode, string]>([<SunOutlined />, 'Light'])
   const [logo, setLogo]           = useState()
   const [helpModalOpen, setHelpModalOpen] = useState(false)
 
   const navigate = useNavigate()
   const logoutMutation = useLogout()
-  const { isDark, toggleDarkMode } = useThemeStore()
+  const isDark = useThemeStore(state => state.isDark)
+  const toggleDarkMode = useThemeStore(state => state.toggleDarkMode)
 
   useEffect(() => {
     if (isDark)
@@ -79,49 +71,91 @@ export function LayoutNav() {
     }
   }
 
+  // NOTE: useMemo doesn't look useful here as the building of this data is cheap
+  const NavButtons = isUserSettings ?
+    [
+      {
+        icon: <BookUser />,
+        label: "Account Settings",
+        onClick: () => { navigate('/user/settings/account') },
+      },
+      {
+        icon: <Palette />,
+        label: "Theme Settings",
+        onClick: () => { navigate('/user/settings/theme') },
+      },
+      {
+        icon: <BookOpenText />,
+        label: "Report Settings",
+        onClick: () => { navigate('/user/settings/report') },
+      },
+    ] : [
+      {
+        icon: <Clock4 />,
+        label: "Real-Time",
+        onClick: () => { navigate('/') },
+      },
+      {
+        icon: <FolderViewOutlined />,
+        label: "Review",
+        onClick: () => {},
+      },
+      {
+        icon: <ReconciliationOutlined />,
+        label: "Summarize",
+        onClick: () => {},
+      },
+      {
+        icon: <TriangleAlert />,
+        label: "Alert",
+        onClick: () => {},
+      },
+    ]
+
   return (
     <>
       <div className="flex w-full items-center py-4 px-10">
         <Section>
-          <LogoArea isDark={isDark} />
+          <LogoArea isDark={isDark} route="/" />
         </Section>
 
         <Section className="justify-center">
-          <Btn icon={<Clock4 />} label="Real-Time" onClick={() => { navigate('/') }} />
-          <Btn icon={<FolderViewOutlined />} label="Review" onClick={() => {}} />
-          <Btn icon={<ReconciliationOutlined />} label="Summarize" onClick={() => {}} />
-          <Btn icon={<TriangleAlert />} label="Alert" onClick={() => {}} />
+          {NavButtons.map( btn => <Btn 
+            key={btn.label} 
+            icon={btn.icon}
+            label={btn.label}
+            onClick={btn.onClick} />)}
         </Section>
 
         <Section className="justify-end">
           <Btn icon={<QuestionOutlined />} label="Help" onClick={() => setHelpModalOpen(true)} />
           <Btn onClick={toggleDarkMode} icon={themeMode[0]} label={themeMode[1]} />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Avatar className="cursor-pointer">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>SF</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
+          <Dropdown.DropdownMenu>
+            <Dropdown.DropdownMenuTrigger>
+              <Avatar.Avatar className="cursor-pointer">
+                <Avatar.AvatarImage src="https://github.com/shadcn.png" />
+                <Avatar.AvatarFallback>SF</Avatar.AvatarFallback>
+              </Avatar.Avatar>
+            </Dropdown.DropdownMenuTrigger>
+            <Dropdown.DropdownMenuContent>
 
-              <DropdownMenuItem 
+              <Dropdown.DropdownMenuItem 
                 className="cursor-pointer"
                 onClick={() => { navigate("/user/settings/account") }}
               >
                 <Settings />
                 Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem 
+              </Dropdown.DropdownMenuItem>
+              <Dropdown.DropdownMenuItem 
                 className="cursor-pointer"
                 onClick={handleLogout}
               >
                 <LogOut />
                 Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </Dropdown.DropdownMenuItem>
+            </Dropdown.DropdownMenuContent>
+          </Dropdown.DropdownMenu>
         </Section>
       </div>
       

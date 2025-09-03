@@ -111,6 +111,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   })),
   selectAllChannels: (channelIds) => set({ selectedChannelIds: channelIds }),
   clearChannelSelection: () => set({ selectedChannelIds: [] }),
+  
   setChannelColors: (channelIds) => {
     const channelColors: Record<string, string> = {}
     // Get custom colors from user settings store
@@ -122,6 +123,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
     set({ channelColors })
   },
+
   getChannelColor: (channelableId) => {
     const state = get()
     // Find the channel index
@@ -142,6 +144,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     // Fallback to a default color for any unassigned channels
     return '#6b7280' // Default gray color
   },
+
   setTalkGroupColors: (talkGroups) => {
     const talkGroupColors: Record<string, string> = {}
     // Get custom colors from user settings store
@@ -153,6 +156,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
     set({ talkGroupColors })
   },
+
   setChannelNameToColorIndex: (channelNames) => {
     const channelNameToColorIndex: Record<string, number> = {}
     // Sort channel names to ensure consistent color assignment
@@ -162,6 +166,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     })
     set({ channelNameToColorIndex })
   },
+
   getTalkGroupColor: (talkGroupName) => {
     const state = get()
     // If color is already assigned in store, use it
@@ -172,6 +177,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
     return '#6b7280' // Default gray color
   },
+
   getChannelColorByTalkGroup: (talkGroupName) => {
     const state = get()
     // Get the color index for this talk group name
@@ -186,6 +192,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     // Fallback to a default color for any unassigned talk groups
     return '#6b7280' // Default gray color
   },
+
   setSelectedTransmission: (transmission) => set({ selectedTransmission: transmission }),
   clearSelectedTransmission: () => set({ selectedTransmission: null }),
   

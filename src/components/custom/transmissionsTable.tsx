@@ -64,6 +64,7 @@ interface TransmissionsTableProps {
   className?: string
   onTransmissionSelect?: (transmission: RadioTransmission | null) => void
   selectedTransmissionId?: string | null
+  autoManageSelection?: boolean // New prop to control whether to auto-manage selection state
 }
 
 const TransmissionsTableEmpty = () => {
@@ -104,8 +105,18 @@ const TransmissionsTableLoading = () => {
   )
 }
 
-export function TransmissionsTable({ className, onTransmissionSelect, selectedTransmissionId }: TransmissionsTableProps) {
-  const { selectedPlaylist, timeRange, selectedChannelIds } = usePlaylistStore()
+export function TransmissionsTable({ 
+  className, 
+  onTransmissionSelect, 
+  selectedTransmissionId,
+  autoManageSelection = false 
+}: TransmissionsTableProps) {
+
+  const selectedPlaylist = usePlaylistStore(state => state.selectedPlaylist)
+  const timeRange = usePlaylistStore(state => state.timeRange)
+  const selectedChannelIds = usePlaylistStore(state => state.selectedChannelIds)
+  const selectedTransmission = usePlaylistStore(state => state.selectedTransmission)
+  const setSelectedTransmission = usePlaylistStore(state => state.setSelectedTransmission)
   
   const { 
     data, 
@@ -275,7 +286,9 @@ export function TransmissionsTable({ className, onTransmissionSelect, selectedTr
                     const { getChannelColorByTalkGroup } = usePlaylistStore.getState()
                     const channelColor = getChannelColorByTalkGroup(tx.sys_tg_name || '')
                     
-                    const isSelected = selectedTransmissionId === tx.id
+                    const isSelected = autoManageSelection 
+                      ? selectedTransmission?.id === tx.id
+                      : selectedTransmissionId === tx.id
                     return (
                       <tr 
                         key={tx.id}
@@ -283,7 +296,12 @@ export function TransmissionsTable({ className, onTransmissionSelect, selectedTr
                           isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                         }`}
                         style={{ borderLeftColor: channelColor, borderLeftWidth: '4px', backgroundColor: `${channelColor}20` }}
-                        onClick={() => onTransmissionSelect?.(tx)}
+                        onClick={() => {
+                          if (autoManageSelection) {
+                            setSelectedTransmission(tx)
+                          }
+                          onTransmissionSelect?.(tx)
+                        }}
                       >
                         <td className="px-3 py-0">
                           {tx.rx_started_at ? formatInTimeZone(new Date(tx.rx_started_at), timeRange?.timezone || 'UTC', 'MMM dd, yyyy') : 'N/A'}

@@ -38,7 +38,9 @@ const ReportingFormSchema = z.object({
 })
 
 export function SectionReporting() {
-  const { reportSettings, updateReportSettings, resetReportSettings } = useUserSettingsStore()
+  const reportSettings = useUserSettingsStore(state => state.reportSettings)
+  const updateReportSettings = useUserSettingsStore(state => state.updateReportSettings)
+  const resetReportSettings = useUserSettingsStore(state => state.resetReportSettings)
   
   const form = useForm<z.infer<typeof ReportingFormSchema>>({
     resolver: zodResolver(ReportingFormSchema),

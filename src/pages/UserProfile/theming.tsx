@@ -41,9 +41,14 @@ const ThemingFormSchema = z.object({
 })
 
 export function SectionTheming() {
-  const { theming, updateTheming, resetTheming, updateCustomColor } = useUserSettingsStore()
-  const { refreshChannelColors } = usePlaylistStore()
-  const { setDarkMode } = useThemeStore()
+  const theming = useUserSettingsStore(state => state.theming)
+  const updateTheming = useUserSettingsStore(state => state.updateTheming)
+  const resetTheming = useUserSettingsStore(state => state.resetTheming)
+  const updateCustomColor = useUserSettingsStore(state => state.updateCustomColor)
+
+  const refreshChannelColors = usePlaylistStore(state => state.refreshChannelColors)
+  const setDarkMode = useThemeStore(state => state.setDarkMode)
+  
   const [openColorPicker, setOpenColorPicker] = useState<number | null>(null)
   
   // Add loading state

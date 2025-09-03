@@ -13,29 +13,43 @@ import {
   PageUserProfile,
 }      from './pages'
 
-function App() {
+
+const createRoute = (path, element, auth = false, end = false) => {
+  if (auth)
+    element = <AuthGuard>{element}</AuthGuard>
+
+  return ({ path, element, end }) 
+}
+
+// Routes are constant and shouldn't be calculated on component render
+// avoiding useMemo() as there's no need for the overhead of a constant value
+const appRoutes = {
+  public: [
+    createRoute('/auth/*', <PageAuthorization />)
+  ],
+  protected: [
+    createRoute('/', <PageHome />, true),
+    createRoute('/user/settings/*', <PageUserProfile />, true)
+  ]
+}
+
+
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <div>
           <Routes>
-            {/* Public routes */}
-            <Route path="/auth/*" element={<PageAuthorization />} />
+            {appRoutes.public.map(({path, element, end}) => 
+              <Route key={path} path={path} element={element} end={end} />)}
             
-            {/* Protected routes */}
-            <Route 
-              path="/"
-              element={<AuthGuard><PageHome /></AuthGuard>} />
-            <Route 
-              path="/user/settings/*"
-              element={<AuthGuard><PageUserProfile /></AuthGuard>} />
+            {appRoutes.protected.map(({path, element, end}) => 
+              <Route key={path} path={path} element={element} end={end} />)}
           </Routes>
         </div>
         <Toaster />
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>
     </QueryClientProvider>
-  );
+  )
 }
-
-export default App

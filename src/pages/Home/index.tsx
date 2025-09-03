@@ -1,20 +1,19 @@
-import { Channels }      from './channels'
-import { LayoutNav }     from './../../layout'
-import { Location }      from './location'
-import { Metadata }      from './metadata'
-import { Playlist }      from './playlist'
-import { TextLog }       from './textLog'
-import { TimeRange }     from './timeRange'
-import { Transcription } from './transcription'
-import { TransmissionTimeline } from './transmissionTimeline'
-import { LayoutRowCollapsible } from './../../layout/layoutRowCollapsible'
+import { Channels }             from './Channels'
+import { Location }             from './Location'
+import { Metadata }             from './Metadata'
+import { Playlist }             from './Playlist'
+import { TransmissionsTable }   from '@/components/custom/transmissionsTable'
+import { TimeRange }            from './TimeRange'
+import { Transcription }        from './Transcription'
+import { TransmissionTimeline } from './TransmissionTimeline'
 
-import { usePlaylists } from '@/hooks/api'
+import {
+  LayoutNav,
+  LayoutRowCollapsible 
+} from '@/layout'
+
 
 export function PageHome() {
-  const { data: playlists, isLoading, error } = usePlaylists() // fetch available playlists
-
-
   const CSS_WRAPPER = `
     flex min-h-screen flex-col w-full items-center text-slate-600 dark:text-slate-300
     bg-white/85 dark:bg-slate-900
@@ -31,22 +30,20 @@ export function PageHome() {
 
     <div className={CSS_CONTENT}>
       <LayoutRowCollapsible title="Config" className="mb-2">
-        <Playlist 
-          playlists={playlists?.radio_playlists || []}
-          isLoading={isLoading}
-          error={error}
-          className="flex-1 max-w-full" 
-        />
+        <Playlist className="flex-1 max-w-full" />
         <Channels className="flex-1 max-w-full" />
-        <TimeRange className="w-auto" />
+        <TimeRange className="flex-1 max-w-full" />
       </LayoutRowCollapsible>
 
       <LayoutRowCollapsible title="Timeline" className="mb-2">
-        <TransmissionTimeline />
+        <TransmissionTimeline className="flex-1 max-w-full" />
       </LayoutRowCollapsible>
 
       <LayoutRowCollapsible title="TX Log" className="mb-2">
-        <TextLog className="flex-1 max-w-full" />
+        <TransmissionsTable 
+          className="flex-1 max-w-full" 
+          autoManageSelection={true}
+        />
       </LayoutRowCollapsible>
 
       <LayoutRowCollapsible title="Message">
