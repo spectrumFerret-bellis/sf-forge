@@ -6,7 +6,7 @@ import { LocationPresent }  from './LocationPresent'
 import { CardWrapper, CardEmptyContent } from './../cardComponents'
 
 
-export function Location({ className }) {
+export function Location({ className }: { className?: string }) {
   const selectedTransmission = usePlaylistStore(state => state.selectedTransmission)
   
   return (

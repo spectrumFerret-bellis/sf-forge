@@ -13,7 +13,6 @@ export function TimeSelectInput({ isStartTime = true }: TimeSelectInputProps) {
   if (!timeRange) return null
 
   const currentTime = isStartTime ? timeRange.start : timeRange.end
-  const timezone = timeRange.timezone
 
   const updateTimeRange = (timeStr: string) => {
     if (timeRange) {

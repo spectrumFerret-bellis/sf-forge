@@ -5,7 +5,7 @@ import { TransmissionTimelinePresent }   from './TransmissionTimelinePresent'
 import { CardWrapper, CardEmptyContent } from './../cardComponents'
 
 
-export function TransmissionTimeline({ className }) {
+export function TransmissionTimeline({ className }: { className?: string }) {
   const selectedPlaylist = usePlaylistStore(state => state.selectedPlaylist)
   
   return (

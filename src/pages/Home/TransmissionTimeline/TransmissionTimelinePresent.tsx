@@ -18,7 +18,7 @@ export function TransmissionTimelinePresent() {
         </p>
       </div>
       <div className="w-full" ref={timelineRef}>
-        <TT containerRef={timelineRef} />
+        <TT containerRef={timelineRef as React.RefObject<HTMLDivElement>} />
       </div>
     </div>
   )

@@ -5,13 +5,13 @@ import { TranscriptionPresent }          from './TranscriptionPresent'
 import { CardWrapper, CardEmptyContent } from './../cardComponents'
 
 
-export function Transcription({ className }) {
+export function Transcription({ className }: { className?: string }) {
   const selectedTransmission = usePlaylistStore(state => state.selectedTransmission)
   
   return (
     <CardWrapper title="Transcription" className={className}>
       {selectedTransmission ? (
-        <TranscriptionPresent transmission={selectedTransmission} />
+        <TranscriptionPresent />
       ) : (
         <CardEmptyContent 
           icon={<Captions size={40} strokeWidth={1} />} 

@@ -1,16 +1,28 @@
 import * as Card from "@/components/ui/card"
 
+interface CardWrapperProps {
+  title: string
+  className?: string
+  contentClassName?: string
+  children: React.ReactNode
+}
 
-export function CardWrapper({ title, className, contentClassName, children }) {
+interface CardEmptyContentProps {
+  icon: React.ReactNode
+  title: string
+  description: string
+}
+
+export function CardWrapper({ title, className, contentClassName, children }: CardWrapperProps) {
   return (
-    <Card.Card className={`w-full max-w-sm ${className}`}>
+    <Card.Card className={`w-full max-w-sm ${className || ''}`}>
       <Card.CardHeader>
         <Card.CardTitle>{title}</Card.CardTitle>
       </Card.CardHeader>
       <Card.CardContent 
         className={`
           pb-5 h-full justify-center items-center flex 
-          text-slate-600 dark:text-slate-300 ${contentClassName}`}
+          text-slate-600 dark:text-slate-300 ${contentClassName || ''}`}
       >
         {children}
       </Card.CardContent>
@@ -18,7 +30,7 @@ export function CardWrapper({ title, className, contentClassName, children }) {
   )
 }
 
-export function CardEmptyContent({ icon, title, description }) {
+export function CardEmptyContent({ icon, title, description }: CardEmptyContentProps) {
   return (
     <div className="text-center flex flex-col items-center">
       <div className="dash-card-icon bg-gray-100 dark:bg-gray-850">

@@ -1,14 +1,12 @@
 import { Info } from 'lucide-react'
 
-import type { RadioTransmission } from '@/hooks/api/transmissions'
-import { usePlaylistStore }       from '@/stores/playlistStore'
-import { formatInTimeZone }       from 'date-fns-tz'
+import { usePlaylistStore } from '@/stores/playlistStore'
 
 import { MetadataPresent } from './MetadataPresent'
 import { CardWrapper, CardEmptyContent } from './../cardComponents'
 
 
-export function Metadata({ className }) {
+export function Metadata({ className }: { className?: string }) {
   const selectedTransmission = usePlaylistStore(state => state.selectedTransmission)
 
   return (

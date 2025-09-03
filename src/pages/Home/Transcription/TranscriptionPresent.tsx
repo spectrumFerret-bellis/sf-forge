@@ -1,12 +1,12 @@
-import { formatInTimeZone }       from 'date-fns-tz'
+import { formatInTimeZone } from 'date-fns-tz'
 import { Textarea }               from "@/components/ui/textarea"
 import { getChannelColorSafe }    from '@/lib/colorUtils'
-import type { RadioTransmission } from '@/hooks/api/transmissions'
 import { usePlaylistStore }       from '@/stores/playlistStore'
 
 
 export function TranscriptionPresent() {
   const selectedTransmission = usePlaylistStore(state => state.selectedTransmission)
+  if (!selectedTransmission) return null
 
   const audioUrl = selectedTransmission.audio_file_url
 
@@ -14,7 +14,7 @@ export function TranscriptionPresent() {
     selectedTransmission.radio_transcriptions?.[0]?.transcription || 'No transcription available'
   
   const channelColor = 
-    getChannelColorSafe(selectedTransmission.channelable_id, '#6b7280')
+    getChannelColorSafe(Number(selectedTransmission.channelable_id), '#6b7280')
   
   return (
     <div className="w-full flex flex-col justify-between h-full gap-4">

@@ -46,7 +46,7 @@ export function PageHome() {
         />
       </LayoutRowCollapsible>
 
-      <LayoutRowCollapsible title="Message">
+      <LayoutRowCollapsible title="Message" className="mb-2">
         <Transcription className="flex-1 max-w-full" />
         <Metadata className="flex-1 max-w-full" />
         <Location className="flex-1 max-w-full" />

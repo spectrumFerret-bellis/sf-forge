@@ -1,16 +1,13 @@
 import { CalendarClock } from 'lucide-react'
 
-import { Badge }     from "@/components/ui/badge"
-
-import { usePlaylistStore, type TimeRange } from '@/stores/playlistStore'
+import { usePlaylistStore } from '@/stores/playlistStore'
 
 import { TimeRangePresent } from './TimeRangePresent'
 import { CardWrapper, CardEmptyContent } from './../cardComponents'
 
 
-export function TimeRange({ className }) {
+export function TimeRange({ className }: { className?: string }) {
   const selectedPlaylist = usePlaylistStore(state => state.selectedPlaylist)
-  const timeRange = usePlaylistStore(state => state.timeRange)
   
   return (
     <CardWrapper title="Time Range" className={className}>

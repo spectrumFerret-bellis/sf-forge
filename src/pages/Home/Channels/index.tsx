@@ -36,7 +36,7 @@ function CardBodyContent() {
     )
   }
 
-  if (channelsData?.channels?.length > 0) {
+  if (channelsData?.channels && channelsData.channels.length > 0) {
     return <ChannelsPresent channels={channelsData.channels} />
   }
 
@@ -45,7 +45,7 @@ function CardBodyContent() {
   </div>)
 }
 
-export function Channels({ className }) {
+export function Channels({ className }: { className?: string }) {
   return (
     <CardWrapper title="Channels" className={className}>
       <CardBodyContent />

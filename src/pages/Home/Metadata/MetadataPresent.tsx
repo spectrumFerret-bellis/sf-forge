@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import * as Table from "@/components/ui/table"
+import type { RadioTransmission } from '@/hooks/api/transmissions'
 
 import {
   Drill,
@@ -30,8 +32,8 @@ const formatFrequency = (freq: number | null | undefined) => {
   return `${(freq / 1000000).toFixed(6)} MHz`
 }
   
-export function MetadataPresent({ transmission }) {
-  const metadataItems = [
+export function MetadataPresent({ transmission }: { transmission: RadioTransmission }) {
+  const metadataItems = useMemo(() => [
     [
       <Wifi strokeWidth={1} size={20} />,
       "Radio System",
@@ -82,7 +84,20 @@ export function MetadataPresent({ transmission }) {
       "RX Lat/Lon",
       formatCoordinates(transmission.rip_rx_latitude, transmission.rip_rx_longitude)
     ],
-  ]
+  ], [
+    transmission.sys_radio_system, 
+    transmission.sys_site, 
+    transmission.sys_channel_name,
+    transmission.sys_tg_name,
+    transmission.sys_tg_number,
+    transmission.channelable_type,
+    transmission.rx_frequency_hz,
+    transmission.tx_radio_id,
+    transmission.tx_latitude,
+    transmission.tx_longitude,
+    transmission.rip_rx_latitude,
+    transmission.rip_rx_longitude
+  ])
 
   return (
     <Table.Table>

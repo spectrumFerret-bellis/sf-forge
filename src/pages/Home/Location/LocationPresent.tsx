@@ -1,5 +1,5 @@
+import { useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import L from 'leaflet'
 import type { RadioTransmission } from '@/hooks/api/transmissions'
 
 
@@ -36,15 +36,10 @@ const getValidCoordinates = (transmission: RadioTransmission): { position: [numb
 
 
 export function LocationPresent({ transmission }: { transmission: RadioTransmission }) {
-  const { position, type } = getValidCoordinates(transmission)
-
-  const getMarkerColor = (type: 'rx' | 'tx') => {
-    return type === 'rx' ? '#10b981' : '#3b82f6' // Green for RX, Blue for TX
-  }
-
-  const getMarkerTitle = (type: 'rx' | 'tx') => {
-    return type === 'rx' ? 'Receiver Location' : 'Transmitter Location'
-  }
+  const { position, type } = useMemo(() => 
+    getValidCoordinates(transmission), 
+    [transmission.rip_rx_latitude, transmission.rip_rx_longitude, transmission.tx_latitude, transmission.tx_longitude]
+  )
 
   return (
     <MapContainer 
